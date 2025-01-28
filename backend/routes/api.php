@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\ProjectController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +21,7 @@ Route::prefix('auth')->group(function () {
 //
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // list admin routes:
-    // Route::apiResource('projects', ProjectController::class);
+    Route::apiResource('projects', ProjectController::class);
 });
 
 Route::middleware(['auth:sanctum', 'role:member'])->group(function () {
