@@ -3,24 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "@headlessui/react": "^1.7.17",
-    "@hello-pangea/dnd": "^16.3.0",
-    "axios": "^1.6.2",
-    "lucide-react": "^0.294.0",
-    "next": "14.2.17",
+    "@headlessui/react": "^2.2.0",
+    "@hello-pangea/dnd": "^17.0.0",
+    "axios": "^1.7.9",
+    "lucide-react": "^0.474.0",
+    "next": "15.1.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "14.2.17",
+    "@eslint/eslintrc": "^3",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.6",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
     "postcss": "^8",
+    "prettier": "^3.4.2",
     "tailwindcss": "^3.4.1"
   }
 }
