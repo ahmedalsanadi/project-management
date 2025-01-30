@@ -1,89 +1,68 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { taskService } from '@/services/task.service';
+"use client";
+import { useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { taskService } from "@/services/task.service";
 
-export default function KanbanBoard({ tasks, onTaskUpdate }) {
-  const [columns, setColumns] = useState({
-    pending: {
-      title: 'Pending',
-      items: [],
+export default function KanbanBoard() {
+  const queryClient = useQueryClient();
+
+  // Fetch tasks using React Query
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: taskService.getAllTasks,
+  });
+
+  // Organize tasks into columns
+  const columns = {
+    pending: { title: "Pending", items: [] },
+    in_progress: { title: "In Progress", items: [] },
+    completed: { title: "Completed", items: [] },
+  };
+
+  tasks.forEach((task) => {
+    if (columns[task.status]) {
+      columns[task.status].items.push(task);
+    }
+  });
+
+  // Task status update mutation
+  const updateTaskStatusMutation = useMutation({
+    mutationFn: ({ id, status }) => taskService.updateTaskStatus(id, status),
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries(["tasks"]);
+
+      const previousTasks = queryClient.getQueryData(["tasks"]);
+
+      queryClient.setQueryData(["tasks"], (oldTasks) =>
+        oldTasks.map((task) =>
+          task.id === id ? { ...task, status } : task
+        )
+      );
+
+      return { previousTasks };
     },
-    in_progress: {
-      title: 'In Progress',
-      items: [],
+    onError: (error, variables, context) => {
+      console.error("Failed to update task status:", error);
+      if (context?.previousTasks) {
+        queryClient.setQueryData(["tasks"], context.previousTasks);
+      }
     },
-    completed: {
-      title: 'Completed',
-      items: [],
+    onSettled: () => {
+      queryClient.invalidateQueries(["tasks"]);
     },
   });
 
-  useEffect(() => {
-    console.log('Fetching tasks...'); // Add this log
-
-    taskService
-      .getAllTasks()
-      .then((data) => {
-        console.log('Received tasks:', data); // Log the actual response
-
-        if (data) {
-          const newColumns = {
-            pending: { title: 'Pending', items: [] },
-            in_progress: { title: 'In Progress', items: [] },
-            completed: { title: 'Completed', items: [] },
-          };
-
-          data.forEach((task) => {
-            if (newColumns[task.status]) {
-              newColumns[task.status].items.push(task);
-            } else {
-              console.warn('Unexpected task status:', task.status);
-            }
-          });
-
-          setColumns(newColumns);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching tasks:', error);
-      });
-  }, []);
-
-  const onDragEnd = async (result) => {
+  const onDragEnd = (result) => {
     if (!result.destination) return;
 
     const { source, destination, draggableId } = result;
-
     if (source.droppableId === destination.droppableId) return;
 
-    // Remove from source
-    const sourceColumn = columns[source.droppableId];
-    const destColumn = columns[destination.droppableId];
-    const sourceItems = [...sourceColumn.items];
-    const destItems = [...destColumn.items];
-    const [removed] = sourceItems.splice(source.index, 1);
-    destItems.splice(destination.index, 0, removed);
-
-    setColumns({
-      ...columns,
-      [source.droppableId]: {
-        ...sourceColumn,
-        items: sourceItems,
-      },
-      [destination.droppableId]: {
-        ...destColumn,
-        items: destItems,
-      },
+    updateTaskStatusMutation.mutate({
+      id: draggableId,
+      status: destination.droppableId,
     });
-
-    // Update task status in backend
-    try {
-      await taskService.updateTaskStatus(draggableId, destination.droppableId);
-      onTaskUpdate && onTaskUpdate();
-    } catch (error) {
-      console.error('Failed to update task status:', error);
-    }
   };
 
   return (
@@ -99,27 +78,25 @@ export default function KanbanBoard({ tasks, onTaskUpdate }) {
                   ref={provided.innerRef}
                   className="flex-1 bg-gray-100 p-4 rounded-lg"
                 >
-                  {column.items.map((task, index) => (
-                    <Draggable
-                      key={task.id}
-                      draggableId={task.id.toString()}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="bg-white p-4 mb-2 rounded shadow"
-                        >
-                          <h3 className="font-medium">{task.title}</h3>
-                          <p className="text-sm text-gray-600">
-                            {task.description}
-                          </p>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                  {isLoading ? (
+                    <p>Loading...</p>
+                  ) : (
+                    column.items.map((task, index) => (
+                      <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="bg-white p-4 mb-2 rounded shadow"
+                          >
+                            <h3 className="font-medium">{task.title}</h3>
+                            <p className="text-sm text-gray-600">{task.description}</p>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))
+                  )}
                   {provided.placeholder}
                 </div>
               )}

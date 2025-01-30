@@ -7,7 +7,6 @@ export const authService = {
 
     console.log('user data is : ', data);
     return data;
-
   },
 
   async register(credentials) {

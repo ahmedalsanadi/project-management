@@ -1,5 +1,7 @@
 import AuthProvider from '@/components/providers/AuthProvider';
 import './globals.css';
+import ReactQueryProvider from '@/providers/ReactQueryProvider';
+import { DarkModeProvider } from '@/providers/ThemeProvider';
 
 export const metadata = {
   title: 'Project Management',
@@ -8,9 +10,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <ReactQueryProvider>
+          <DarkModeProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </DarkModeProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

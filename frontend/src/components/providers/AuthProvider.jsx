@@ -1,66 +1,44 @@
-// src/components/providers/AuthProvider.jsx
 'use client';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { authService } from '@/services/auth.service';
+
+import { createContext, useContext } from 'react';
+import { useUser, useLogin, useRegister, useLogout } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const user = await authService.getUser();
-          setUser(user);
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //fetch user data
+  const { data: user, isLoading } = useUser();
 
-    initAuth();
-  }, []);
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logoutMutation = useLogout();
 
   const login = async (email, password) => {
     try {
-      const { user, token } = await authService.login({ email, password });
-      // console.log('user is : ', user);
-      // console.log('token is : ', token);
-      localStorage.setItem('token', token);
-      setUser(user);
+      await loginMutation.mutateAsync({ email, password });
       router.push('/dashboard');
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   };
 
   const register = async (name, email, password) => {
     try {
-      const { user, token } = await authService.register({
-        name,
-        email,
-        password,
-      });
-      localStorage.setItem('token', token);
-      setUser(user);
+      await registerMutation.mutateAsync({ name, email, password });
       router.push('/dashboard');
     } catch (error) {
+      console.error('Register error:', error);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await authService.logout();
-      setUser(null);
+      await logoutMutation.mutateAsync();
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
@@ -68,7 +46,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
