@@ -6,9 +6,13 @@ use App\Http\Controllers\API\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+Route::get('/user', function (Request $request) {
+    if (Auth::check()) {
+        return response()->json($request->user());
+    } else {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
+})->middleware('auth:sanctum');
 
 Route::prefix('auth')->group(function () {
 

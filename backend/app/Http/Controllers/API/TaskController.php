@@ -15,17 +15,19 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
+        \Log::info('Fetching tasks for user: ', ['id' => $request->user()->id]);
         if ($request->user()->role === 'admin') {
-            $tasks = Task::with(['project', 'assignedUser'])->get();
+            $tasks = Task::with('project')->get();
         } else {
             $tasks = Task::with('project')->where('assigned_to', $request->user()->id)->get();
         }
 
         return response()->json([
             'message' => 'Tasks retrieved successfully',
-            'data' => $tasks,
+            'data' => $tasks ?? [], // ✅ Ensure it always returns an array
         ], 200);
     }
+
 
     /**
      * Store a newly created task (Only Admins can create tasks).
