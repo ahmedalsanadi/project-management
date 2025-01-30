@@ -15,10 +15,11 @@ return new class extends Migration {
             $table->string('title');
             $table->text('description')->nullable();
             $table->foreignId('project_id')->constrained()->onDelete('cascade'); // Foreign key to projects
-            $table->foreignId('assigned_to')->constrained('users')->onDelete('cascade'); // Foreign key to users
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('cascade');
+
             $table->date('deadline')->nullable();
             $table->string('status')->default('pending'); // Task status (e.g., pending, in_progress, completed)
-            $table->date('completed_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }
