@@ -3,7 +3,7 @@ import ThemeSwitch from '@/components/common/ThemeSwitch';
 
 export function Navbar() {
   return (
-    <nav className="bg-white shadow">
+    <nav className="bg-white border-b border-gray-100 dark:bg-gray-900 dark:border-gray-800 ">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">

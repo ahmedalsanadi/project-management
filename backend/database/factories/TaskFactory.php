@@ -34,7 +34,7 @@ class TaskFactory extends Factory
             'assigned_to' => $this->faker->randomElement($memberUsers),
             'deadline' => $this->faker->dateTimeBetween('now', '+1 month'),
             'status' => $status,
-            'completed_at' => $status === 'completed' ? $this->faker->dateTimeBetween('-1 month', 'now') : null,
+            'completed_at' => $status === 'completed' ? $this->faker->dateTimeBetween('-12 month', 'now') : null,
         ];
     }
 }
