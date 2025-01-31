@@ -157,11 +157,15 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={data?.monthlyTrend}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                 
                 >
                   <CartesianGrid strokeDasharray="1 1" stroke="#374151" />
                   <XAxis
                     dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280' }}
+                    
                     stroke="#6B7280"
                     tick={{ fill: '#6B7280' }}
                     tickFormatter={(month) => {
