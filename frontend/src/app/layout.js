@@ -2,6 +2,7 @@ import AuthProvider from '@/components/providers/AuthProvider';
 import './globals.css';
 import ReactQueryProvider from '@/providers/ReactQueryProvider';
 import { DarkModeProvider } from '@/providers/ThemeProvider';
+import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
   title: 'Project Management',
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
         <ReactQueryProvider>
           <DarkModeProvider>
             <AuthProvider>{children}</AuthProvider>
+            <Toaster />
           </DarkModeProvider>
         </ReactQueryProvider>
       </body>

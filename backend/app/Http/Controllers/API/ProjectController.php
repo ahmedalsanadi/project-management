@@ -58,7 +58,13 @@ class ProjectController extends Controller
 
     public function show($id)
     {
-        $project = Project::find($id);
+
+        $project = Project::with([
+            'tasks' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            },
+            'tasks.assignedUser:id,name'
+        ])->find($id);
 
         if (!$project) {
             return response()->json([

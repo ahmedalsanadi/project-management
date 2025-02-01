@@ -28,6 +28,8 @@ Route::prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // list admin routes:
     Route::apiResource('projects', ProjectController::class);
+    Route::get('/members', [TaskController::class, 'getMembers']);
+    Route::patch('/tasks/{id}/status', [TaskController::class, 'updateStatus']);
 
 });
 
