@@ -58,7 +58,8 @@ class ProjectController extends Controller
 
     public function show($id)
     {
-        $project = Project::find($id);
+        // Fetch the project with its tasks and the assigned user for each task
+        $project = Project::with('tasks.assignedUser')->find($id);
 
         if (!$project) {
             return response()->json([

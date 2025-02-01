@@ -1,3 +1,4 @@
+// frontend/src/components/common/ConfirmationModal.jsx
 'use client';
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
