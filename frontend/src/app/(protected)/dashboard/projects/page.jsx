@@ -3,12 +3,19 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '@/services/project.service';
-import { Plus, Eye, Trash2 } from 'lucide-react';
+import { Plus, Eye, Trash2, Edit } from 'lucide-react';
 import ProjectFormModal from '@/components/common/ProjectFormModal';
+import ConfirmationModal from '@/components/common/ConfirmationModal'; // Import the confirmation modal
+
 export default function ProjectsPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [projectToEdit, setProjectToEdit] = useState(null);
 
+  // Fetch all projects using React Query
   const {
     data: projects,
     isLoading,
@@ -19,7 +26,7 @@ export default function ProjectsPage() {
     queryFn: () => projectService.getAllProjects(),
   });
 
-  // creating a new project
+  // Mutation for creating a new project
   const createProjectMutation = useMutation({
     mutationFn: (projectData) => projectService.createProject(projectData),
     onSuccess: () => {
@@ -27,7 +34,16 @@ export default function ProjectsPage() {
     },
   });
 
-  // deleting a project
+  // Mutation for updating a project
+  const updateProjectMutation = useMutation({
+    mutationFn: ({ id, projectData }) =>
+      projectService.updateProject(id, projectData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+
+  // Mutation for deleting a project
   const deleteProjectMutation = useMutation({
     mutationFn: (id) => projectService.deleteProject(id),
     onSuccess: () => {
@@ -35,17 +51,30 @@ export default function ProjectsPage() {
     },
   });
 
-  //handle submission for creating a new project
+  // Handle form submission for creating a new project
   const handleCreateProject = async (projectData) => {
     await createProjectMutation.mutateAsync(projectData);
     setIsModalOpen(false);
   };
 
-  // handle deleting a project
-  const handleDeleteProject = async (id) => {
-    await deleteProjectMutation.mutateAsync(id);
+  // Handle form submission for updating a project
+  const handleUpdateProject = async (projectData) => {
+    await updateProjectMutation.mutateAsync({
+      id: projectToEdit.id,
+      projectData,
+    });
+    setIsEditModalOpen(false);
   };
 
+  // Handle deleting a project
+  const handleDeleteProject = async () => {
+    if (projectToDelete) {
+      await deleteProjectMutation.mutateAsync(projectToDelete);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  // Format the date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -55,7 +84,7 @@ export default function ProjectsPage() {
     });
   };
 
-  // limit description to 6 words
+  // Limit description to 6 words
   const truncateDescription = (description) => {
     const words = description.split(' ');
     return words.length > 6 ? words.slice(0, 6).join(' ') + '...' : description;
@@ -70,7 +99,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div>
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
           Projects
@@ -85,8 +114,8 @@ export default function ProjectsPage() {
       </div>
 
       {/* Projects Table */}
-      <div className="overflow-x-auto ">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 p-4">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <th
@@ -145,7 +174,19 @@ export default function ProjectsPage() {
                       <Eye className="h-5 w-5" />
                     </a>
                     <button
-                      onClick={() => handleDeleteProject(project.id)}
+                      onClick={() => {
+                        setProjectToEdit(project);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                    >
+                      <Edit className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setProjectToDelete(project.id);
+                        setIsDeleteModalOpen(true);
+                      }}
                       className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                     >
                       <Trash2 className="h-5 w-5" />
@@ -163,6 +204,26 @@ export default function ProjectsPage() {
         <ProjectFormModal
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleCreateProject}
+        />
+      )}
+
+      {/* Edit Project Modal */}
+      {isEditModalOpen && (
+        <ProjectFormModal
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdateProject}
+          initialData={projectToEdit}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteProject}
+          title="Delete Project"
+          message="Are you sure you want to delete this project? This action cannot be undone."
         />
       )}
     </div>
