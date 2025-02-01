@@ -8,13 +8,12 @@ import {
   CheckCircle2,
   Activity,
   UserPlus,
-
 } from 'lucide-react';
 import Card from '@/components/common/Card';
 import { UserRoleCard } from '@/components/common/UserRoleCard';
 import RecentUserCard from '@/components/common/RecentUserCard';
-import ProgressBar from '@/components/common/ProgressBar';
 import ProjectsOverview from '@/components/common/ProjectsOverview';
+import MonthlyPerformanceCard from '@/components/common/MonthlyPerformanceCard';
 
 const Dashboard = () => {
   const { data, isLoading } = useDashboardStatistics();
@@ -67,12 +66,12 @@ const Dashboard = () => {
     },
   ];
 
-  //   // Task Status Distribution for Pie Chart
-  //   const taskStatusDistribution = [
-  //     { name: 'Completed', value: data?.taskStatus?.completed?.count || 0 },
-  //     { name: 'In Progress', value: data?.taskStatus?.in_progress?.count || 0 },
-  //     { name: 'Pending', value: data?.taskStatus?.pending?.count || 0 },
-  //   ];
+  // Task Status Distribution for Pie Chart
+  const taskStatusDistribution = [
+    { name: 'Completed', value: data?.taskStatus?.completed?.count || 0 },
+    { name: 'In Progress', value: data?.taskStatus?.in_progress?.count || 0 },
+    { name: 'Pending', value: data?.taskStatus?.pending?.count || 0 },
+  ];
 
   return (
     <OverviewLayout
@@ -81,14 +80,7 @@ const Dashboard = () => {
       statsCards={statsCards}
       taskStatusData={data?.taskStatus}
       monthlyTrend={data?.monthlyTrend}
-      taskStatusDistribution={[
-        { name: 'Completed', value: data?.taskStatus?.completed?.count || 0 },
-        {
-          name: 'In Progress',
-          value: data?.taskStatus?.in_progress?.count || 0,
-        },
-        { name: 'Pending', value: data?.taskStatus?.pending?.count || 0 },
-      ]}
+      taskStatusDistribution={taskStatusDistribution}
       totalTasks={data?.totalTasks}
       gridColumns={4}
     >
@@ -96,31 +88,13 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Performance Overview */}
-        <Card title="Monthly Performance" icon={Activity}>
-          <div className="space-y-6">
-            {/* This Month's Completion */}
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-purple-700 dark:text-purple-300">
-                  Tasks Completed This Month
-                </span>
-                <span className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  {data?.completedTasksThisMonth || 0}
-                </span>
-              </div>
-              <div className="h-2 bg-purple-200 dark:bg-purple-700 rounded-full">
-                <div
-                  className="h-full bg-purple-500 rounded-full"
-                  style={{
-                    width: `${Math.min(((data?.completedTasksThisMonth || 0) / (data?.totalTasks || 1)) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
+        <MonthlyPerformanceCard
+          completedTasksThisMonth={data?.completedTasksThisMonth}
+          totalTasks={data?.totalTasks}
+        />
 
         {/* Role Distribution */}
+
         <Card title="User Roles" icon={Users}>
           <div className="space-y-4">
             <UserRoleCard role="Admins" count={data?.usersByRole?.admin || 0} />
@@ -142,7 +116,6 @@ const Dashboard = () => {
 
       {/* Projects Overview */}
       <ProjectsOverview projects={data?.projects} />
-
     </OverviewLayout>
   );
 };
