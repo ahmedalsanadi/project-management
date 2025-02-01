@@ -1,20 +1,44 @@
 'use client';
-import { use } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { use, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '@/services/project.service';
+import { taskService } from '@/services/task.service';
 import KanbanBoard from '@/components/dashboard/KanbanBoard';
-import TaskTable from '@/components/dashboard/TaskTable'; // Import the new Table component
-import { Calendar, Clock, Users, LayoutGrid, Table } from 'lucide-react';
+import TaskTable from '@/components/dashboard/TaskTable';
+import { Calendar, Clock, Users, LayoutGrid, Table, Plus } from 'lucide-react';
 import { Spinner } from '@/components/common/Spinner';
-import { useState } from 'react';
+import TaskFormModal from '@/components/common/TaskFormModal';
 
 const ShowProject = ({ params }) => {
   const { id } = use(params);
-  const [viewMode, setViewMode] = useState('kanban'); // State to track view mode
-  const { data: project, isLoading, isError, error } = useQuery({
+  const [viewMode, setViewMode] = useState('kanban');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const {
+    data: project,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['project', id],
     queryFn: () => projectService.getProject(id),
   });
+
+  const createTaskMutation = useMutation({
+    mutationFn: (taskData) => taskService.createTask(taskData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['project', id]);
+      setIsCreateModalOpen(false);
+    },
+  });
+
+  const handleCreateTask = async (taskData) => {
+    await createTaskMutation.mutateAsync({
+      ...taskData,
+      project_id: id,
+    });
+  };
 
   if (isLoading) {
     return <Spinner />;
@@ -32,6 +56,7 @@ const ShowProject = ({ params }) => {
 
   return (
     <div className="space-y-8">
+      {/* Previous project header code remains the same */}
       <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-4">
@@ -51,7 +76,9 @@ const ShowProject = ({ params }) => {
             </div>
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <Users className="w-4 h-4" />
-              <span className="text-sm">{project.team_members} team members</span>
+              <span className="text-sm">
+                {project.team_members} team members
+              </span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <Clock className="w-4 h-4" />
@@ -69,6 +96,13 @@ const ShowProject = ({ params }) => {
             Project Tasks
           </h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Task</span>
+            </button>
             <button
               onClick={() => setViewMode('kanban')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
@@ -101,6 +135,15 @@ const ShowProject = ({ params }) => {
           )}
         </div>
       </div>
+
+      {/* Create Task Modal */}
+      {isCreateModalOpen && (
+        <TaskFormModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateTask}
+          projectId={id}
+        />
+      )}
     </div>
   );
 };

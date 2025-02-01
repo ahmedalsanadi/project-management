@@ -58,8 +58,8 @@ class ProjectController extends Controller
 
     public function show($id)
     {
-        // Fetch the project with its tasks and the assigned user for each task
-        $project = Project::with('tasks.assignedUser')->find($id);
+        // Fetch the project with its tasks and the assigned user (including name)
+        $project = Project::with(['tasks.assignedUser:id,name'])->find($id);
 
         if (!$project) {
             return response()->json([
@@ -74,6 +74,7 @@ class ProjectController extends Controller
             'data' => $project,
         ], 200);
     }
+
 
     public function update(Request $request, $id)
     {

@@ -17,7 +17,10 @@ class TaskController extends Controller
     {
         \Log::info('Fetching tasks for user: ', ['id' => $request->user()->id]);
         if ($request->user()->role === 'admin') {
-            $tasks = Task::with('project')->get();
+            $tasks = Task::with('project')
+            ->orderBy('updated_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
         } else {
             $tasks = Task::with('project')->where('assigned_to', $request->user()->id)->get();
         }
@@ -41,6 +44,7 @@ class TaskController extends Controller
             'project_id' => 'required|exists:projects,id',
             'assigned_to' => 'required|exists:users,id',
             'deadline' => 'nullable|date',
+            'status' => 'required|string|in:pending,in_progress,completed',
         ];
 
         // Validate request
@@ -158,4 +162,12 @@ class TaskController extends Controller
         ], 200);
     }
 
+    public function getMembers()
+    {
+        $members = User::where('role', 'member')->get();
+        return response()->json([
+            'message' => 'Members retrieved successfully',
+            'data' => $members,
+        ], 200);
+    }
 }

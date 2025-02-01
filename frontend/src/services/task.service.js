@@ -1,3 +1,4 @@
+// src/services/task.service.js
 import instance from '@/config/axios';
 
 export const taskService = {
@@ -27,6 +28,11 @@ export const taskService = {
 
   updateTaskStatus: async (id, status) => {
     const { data } = await instance.patch(`/tasks/${id}/status`, { status });
+    return data.data;
+  },
+
+  getMembers: async () => {
+    const { data } = await instance.get('/members');
     return data.data;
   },
 };
