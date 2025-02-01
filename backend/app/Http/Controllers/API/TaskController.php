@@ -18,9 +18,9 @@ class TaskController extends Controller
         \Log::info('Fetching tasks for user: ', ['id' => $request->user()->id]);
         if ($request->user()->role === 'admin') {
             $tasks = Task::with('project')
-            ->orderBy('updated_at', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+                ->orderBy('updated_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
         } else {
             $tasks = Task::with('project')->where('assigned_to', $request->user()->id)->get();
         }
@@ -162,6 +162,37 @@ class TaskController extends Controller
         ], 200);
     }
 
+    public function updateStatus(Request $request, string $id)
+    {
+        $task = Task::find($id);
+
+        if (!$task) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Task not found',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|string|in:pending,in_progress,completed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $task->update(['status' => $request->status]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Task status updated successfully',
+            'data' => $task,
+        ], 200);
+    }
     public function getMembers()
     {
         $members = User::where('role', 'member')->get();
